@@ -1,4 +1,4 @@
-package com.cntt2.flashcard;
+package com.cntt2.flashcard.animation;
 
 import android.view.View;
 
