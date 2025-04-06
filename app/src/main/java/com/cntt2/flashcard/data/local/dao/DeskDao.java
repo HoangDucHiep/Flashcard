@@ -47,6 +47,17 @@ public class DeskDao {
         db.close();
     }
 
+    public void updateDesk(Desk desk) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("folder_id", desk.getFolderId());
+        values.put("name", desk.getName());
+        values.put("created_at", desk.getCreatedAt());
+        values.put("is_public", desk.isPublic() ? 1 : 0);
+        db.update("desks", values, "id = ?", new String[]{String.valueOf(desk.getId())});
+        db.close();
+    }
+
     @SuppressLint("Range")
     public List<Desk> getDesksByFolderId(int folderId) {
         List<Desk> desks = new ArrayList<>();

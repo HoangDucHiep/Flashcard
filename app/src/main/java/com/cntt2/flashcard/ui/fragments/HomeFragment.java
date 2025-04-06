@@ -1,12 +1,15 @@
 package com.cntt2.flashcard.ui.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -60,6 +63,14 @@ public class HomeFragment extends Fragment {
         AddFolderAndDeckFAB.setOnClickListener(v -> showCreateBottomSheet());
         searchView = view.findViewById(R.id.SearchFoldersAndDecksSV);
 
+        ShowFolderAndDeckLV.setOnItemLongClickListener((parent, view1, position, id) -> {
+            showPopupMenu(view1, position);
+            return true;
+        });
+
+
+
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -75,6 +86,186 @@ public class HomeFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void showPopupMenu(View view, int position) {
+        PopupMenu popupMenu = new PopupMenu(requireContext(), view);
+        popupMenu.getMenuInflater().inflate(R.menu.folder_popup_menu, popupMenu.getMenu());
+
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            Object selectedItem = adapter.getItem(position);
+            if (item.getItemId() == R.id.folder_action_edit) {
+                if (selectedItem instanceof Folder) {
+                    editFolder((Folder) selectedItem);
+                } else if (selectedItem instanceof Desk) {
+                    editDesk((Desk) selectedItem);
+                }
+                return true;
+            } else if (item.getItemId() == R.id.folder_action_delete) {
+                if (selectedItem instanceof Folder) {
+                    deleteFolder((Folder) selectedItem);
+                } else if (selectedItem instanceof Desk) {
+                    deleteDesk((Desk) selectedItem);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            popupMenu.setGravity(Gravity.CENTER);
+        }
+
+        popupMenu.show();
+    }
+
+    private void handlePublicDesk(Desk desk) {
+        desk.setPublic(!desk.isPublic());
+        deskRepository.updateDesk(desk);
+        nestedFoldersDesks = getFoldersFromLocalDb();  // Cập nhật danh sách
+        adapter.updateFolderList(nestedFoldersDesks);  // Cập nhật giao diện
+        Toast.makeText(getContext(), "Desk visibility updated", Toast.LENGTH_SHORT).show();
+    }
+
+
+    private void editFolder(Folder folder) {
+        showEditFolderDialog(folder);  // Mở dialog để sửa thông tin Folder
+    }
+
+    private void showEditFolderDialog(Folder folder) {
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.bottom_sheet_create_folder, null);
+        BottomSheetDialog editFolderDialog = new BottomSheetDialog(requireContext());
+        editFolderDialog.setContentView(view);
+
+        EditText folderNameInput = view.findViewById(R.id.folderNameInput);
+        folderNameInput.setText(folder.getName());
+
+        Spinner parentFolderSpinner = view.findViewById(R.id.parentFolderSpinner);
+        List<String> folderNames = getFolderNamesWithIndent();
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(), android.R.layout.simple_spinner_item, folderNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        parentFolderSpinner.setAdapter(spinnerAdapter);
+
+        List<Folder> allFolders = getAllFoldersList();
+        int parentPosition = 0;
+        if (folder.getParentFolderId() != null) {
+            for (int i = 0; i < allFolders.size(); i++) {
+                if (allFolders.get(i).getId() == folder.getParentFolderId()) {
+                    parentPosition = i + 1;
+                    break;
+                }
+            }
+        }
+        parentFolderSpinner.setSelection(parentPosition);
+
+        view.findViewById(R.id.btnFolderSave).setOnClickListener(v -> {
+            String newName = folderNameInput.getText().toString().trim();
+            if (newName.isEmpty()) {
+                folderNameInput.setError("Folder name cannot be empty");
+                return;
+            }
+
+            int selectedPosition = parentFolderSpinner.getSelectedItemPosition();
+            if (selectedPosition == 0) {
+                folder.setParentFolderId(null);  // Không có thư mục cha
+            } else {
+                Folder parentFolder = allFolders.get(selectedPosition - 1);
+                folder.setParentFolderId(parentFolder.getId());
+            }
+
+            folder.setName(newName);  // Cập nhật tên mới
+            folderRepository.updateFolder(folder);  // Lưu vào cơ sở dữ liệu
+
+            // **Sửa đổi ở đây**: Tải lại dữ liệu và cập nhật adapter
+            nestedFoldersDesks = getFoldersFromLocalDb();  // Lấy cấu trúc folder mới từ cơ sở dữ liệu
+            adapter.updateFolderList(nestedFoldersDesks);  // Cập nhật dữ liệu trong adapter
+            adapter.notifyDataSetChanged();  // Thông báo cập nhật giao diện
+
+            editFolderDialog.dismiss();
+            Toast.makeText(getContext(), "Folder updated", Toast.LENGTH_SHORT).show();
+        });
+
+        editFolderDialog.show();
+    }
+    private void deleteFolder(Folder folder) {
+        folderRepository.deleteFolder(folder);  // Xóa Folder từ cơ sở dữ liệu
+        nestedFoldersDesks = getFoldersFromLocalDb();  // Cập nhật danh sách
+        adapter.updateFolderList(nestedFoldersDesks);  // Cập nhật giao diện
+        Toast.makeText(getContext(), "Folder deleted", Toast.LENGTH_SHORT).show();
+    }
+
+    private void editDesk(Desk desk) {
+        showEditDeskDialog(desk);
+    }
+
+    public void showEditDeskDialog(Desk desk) {
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.bottom_sheet_create_deck, null);
+        BottomSheetDialog editDeskDialog = new BottomSheetDialog(requireContext());
+        editDeskDialog.setContentView(view);
+
+        EditText deckNameInput = view.findViewById(R.id.deckNameInput);
+        deckNameInput.setText(desk.getName());
+
+        Spinner folderSpinner = view.findViewById(R.id.folderSpinner);
+        List<String> folderNames = getFolderNamesWithIndent();
+        folderNames.set(0, getString(R.string.select_folder_prompt)); // "Please select a folder"
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(), android.R.layout.simple_spinner_item, folderNames
+        );
+
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        folderSpinner.setAdapter(spinnerAdapter);
+
+        List<Folder> allFolders = getAllFoldersList();
+        int folderPosition = 0;
+
+        for (int i = 0; i < allFolders.size(); i++) {
+            if (allFolders.get(i).getId() == desk.getFolderId()) {
+                folderPosition = i + 1;
+                break;
+            }
+        }
+
+        folderSpinner.setSelection(folderPosition);
+
+        view.findViewById(R.id.btnDeckSave).setOnClickListener(v -> {
+            String newName = deckNameInput.getText().toString().trim();
+            if (newName.isEmpty()) {
+                deckNameInput.setError("Deck name cannot be empty");
+                return;
+            }
+
+            int selectedPosition = folderSpinner.getSelectedItemPosition();
+            if (selectedPosition == 0) {
+                Toast.makeText(requireContext(), "Please select a folder", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Folder parentFolder = allFolders.get(selectedPosition - 1);
+            desk.setFolderId(parentFolder.getId());
+            desk.setName(newName);  // Cập nhật tên mới
+            deskRepository.updateDesk(desk);  // Lưu vào cơ sở dữ liệu
+
+            nestedFoldersDesks = getFoldersFromLocalDb();  // Lấy cấu trúc folder mới từ cơ sở dữ liệu
+            adapter.updateFolderList(nestedFoldersDesks);  // Cập nhật dữ liệu trong adapter
+            adapter.notifyDataSetChanged();  // Thông báo cập nhật giao diện
+
+            editDeskDialog.dismiss();
+            Toast.makeText(getContext(), "Desk updated", Toast.LENGTH_SHORT).show();
+        });
+
+
+    }
+
+    private void deleteDesk(Desk desk) {
+        deskRepository.deleteDesk(desk);  // Xóa Desk từ cơ sở dữ liệu
+        nestedFoldersDesks = getFoldersFromLocalDb();  // Cập nhật danh sách
+        adapter.updateFolderList(nestedFoldersDesks);  // Cập nhật giao diện
+        Toast.makeText(getContext(), "Desk deleted", Toast.LENGTH_SHORT).show();
     }
 
     private void filterDesks(String query) {

@@ -29,4 +29,8 @@ public class DeskRepository {
     public List<Desk> getDesksByFolderId(int folderId) {
         return deskDao.getDesksByFolderId(folderId);
     }
+
+    public void updateDesk(Desk desk) {
+        deskDao.updateDesk(desk);
+    }
 }
