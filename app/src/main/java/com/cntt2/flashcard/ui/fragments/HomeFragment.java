@@ -38,6 +38,7 @@ public class HomeFragment extends Fragment {
     private FolderRepository folderRepository = App.getInstance().getFolderRepository();
     private DeskRepository deskRepository = App.getInstance().getDeskRepository();
     private SearchView searchView;
+    private List<Desk> allDesks;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -53,10 +54,42 @@ public class HomeFragment extends Fragment {
         ShowFolderAndDeckLV = view.findViewById(R.id.ShowFoldersAndDecksLV);
         AddFolderAndDeckFAB = view.findViewById(R.id.AddFoldersAndDecksFAB);
         nestedFoldersDesks = getFoldersFromLocalDb();
-        adapter = new ShowFoldersAndDecksAdapter(getActivity(), nestedFoldersDesks);
+        allDesks = deskRepository.getAllDesks();
+        adapter = new ShowFoldersAndDecksAdapter(getActivity(), nestedFoldersDesks, allDesks);
         ShowFolderAndDeckLV.setAdapter(adapter);
         AddFolderAndDeckFAB.setOnClickListener(v -> showCreateBottomSheet());
+        searchView = view.findViewById(R.id.SearchFoldersAndDecksSV);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterDesks(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterDesks(newText);
+                return false;
+            }
+        });
+
         return view;
+    }
+
+    private void filterDesks(String query) {
+        if (query.isEmpty()) {
+            adapter.setSearchMode(false, null); // Quay lại chế độ bình thường
+        } else {
+            List<Desk> filteredDesks = new ArrayList<>();
+            for (Desk desk : allDesks) {
+                if (desk.getName().toLowerCase().contains(query.toLowerCase())) {
+                    filteredDesks.add(desk);
+                }
+            }
+            adapter.setSearchMode(true, filteredDesks); // Chuyển sang chế độ tìm kiếm
+        }
+        adapter.notifyDataSetChanged(); // Cập nhật giao diện
     }
 
     private void showCreateBottomSheet() {
