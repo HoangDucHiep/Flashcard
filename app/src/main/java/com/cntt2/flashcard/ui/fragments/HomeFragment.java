@@ -90,28 +90,42 @@ public class HomeFragment extends Fragment {
 
     private void showPopupMenu(View view, int position) {
         PopupMenu popupMenu = new PopupMenu(requireContext(), view);
-        popupMenu.getMenuInflater().inflate(R.menu.folder_popup_menu, popupMenu.getMenu());
+        Object selectedItem = adapter.getItem(position);
 
+        // Kiểm tra loại item và inflate menu tương ứng
+        if (selectedItem instanceof Folder) {
+            popupMenu.getMenuInflater().inflate(R.menu.folder_popup_menu, popupMenu.getMenu());
+        } else if (selectedItem instanceof Desk) {
+            popupMenu.getMenuInflater().inflate(R.menu.desk_popup_menu, popupMenu.getMenu());
+            // Cập nhật tiêu đề của "Make public" dựa trên trạng thái hiện tại của Desk
+            Desk desk = (Desk) selectedItem;
+            popupMenu.getMenu().findItem(R.id.desk_action_public).setTitle(desk.isPublic() ? "Make private" : "Make public");
+        }
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            Object selectedItem = adapter.getItem(position);
-            if (item.getItemId() == R.id.folder_action_edit) {
-                if (selectedItem instanceof Folder) {
+            if (selectedItem instanceof Folder) {
+                // Xử lý menu cho Folder
+                if (item.getItemId() == R.id.folder_action_edit) {
                     editFolder((Folder) selectedItem);
-                } else if (selectedItem instanceof Desk) {
-                    editDesk((Desk) selectedItem);
-                }
-                return true;
-            } else if (item.getItemId() == R.id.folder_action_delete) {
-                if (selectedItem instanceof Folder) {
+                    return true;
+                } else if (item.getItemId() == R.id.folder_action_delete) {
                     deleteFolder((Folder) selectedItem);
-                } else if (selectedItem instanceof Desk) {
-                    deleteDesk((Desk) selectedItem);
+                    return true;
                 }
-                return true;
-            } else {
-                return false;
+            } else if (selectedItem instanceof Desk) {
+                // Xử lý menu cho Desk
+                if (item.getItemId() == R.id.desk_action_edit) {
+                    editDesk((Desk) selectedItem);
+                    return true;
+                } else if (item.getItemId() == R.id.desk_action_public) {
+                    handlePublicDesk((Desk) selectedItem);
+                    return true;
+                } else if (item.getItemId() == R.id.desk_action_delete) {
+                    deleteDesk((Desk) selectedItem);
+                    return true;
+                }
             }
+            return false;
         });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -258,7 +272,7 @@ public class HomeFragment extends Fragment {
             Toast.makeText(getContext(), "Desk updated", Toast.LENGTH_SHORT).show();
         });
 
-
+        editDeskDialog.show();
     }
 
     private void deleteDesk(Desk desk) {

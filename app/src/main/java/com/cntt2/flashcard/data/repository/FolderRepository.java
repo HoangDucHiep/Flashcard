@@ -27,6 +27,18 @@ public class FolderRepository {
     }
 
     public void deleteFolder(Folder folder) {
+        // delete all nested folders and desks
+        List<Desk> desks = deskDao.getDesksByFolderId(folder.getId());
+        for (Desk desk : desks) {
+            deskDao.deleteDesk(desk.getId());
+        }
+
+        List<Folder> subFolders = folder.getSubFolders();
+
+        for (Folder subFolder : subFolders) {
+            deleteFolder(subFolder);
+        }
+
         folderDao.deleteFolder(folder.getId());
     }
 
