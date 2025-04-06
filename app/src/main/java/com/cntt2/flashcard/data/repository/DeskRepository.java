@@ -14,6 +14,10 @@ public class DeskRepository {
         this.deskDao = new DeskDao(context);
     }
 
+    public List<Desk> getAllDesks() {
+        return deskDao.getAllDesks();
+    }
+
     public long insertDesk(Desk desk) {
         return deskDao.insertDesk(desk);
     }

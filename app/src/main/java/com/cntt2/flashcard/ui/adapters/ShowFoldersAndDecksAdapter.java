@@ -18,8 +18,11 @@ import java.util.List;
 public class ShowFoldersAndDecksAdapter extends BaseAdapter {
     private Activity context;
     private List<Folder> folderList;
+    private List<Desk> allDesks;
     private LayoutInflater inflater;
     private int indentWidth = 60;
+    private boolean isSearchMode = false;
+    private List<Desk> filteredDesks;
 
     private static final int TYPE_FOLDER = 0;
     private static final int TYPE_DESK = 1;
@@ -38,23 +41,29 @@ public class ShowFoldersAndDecksAdapter extends BaseAdapter {
 
     private List<ListItem> flattenedList = new ArrayList<>();
 
-    public ShowFoldersAndDecksAdapter(Activity context, List<Folder> folderList) {
+    public ShowFoldersAndDecksAdapter(Activity context, List<Folder> folderList, List<Desk> allDesks) {
         this.context = context;
         this.folderList = folderList;
-        this.inflater = (LayoutInflater)context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
+        this.allDesks = allDesks;
+        this.inflater = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
         updateFlattenedList();
     }
 
     private void updateFlattenedList() {
         flattenedList.clear();
-        for (Folder folder : folderList) {
-            addFolderToFlattenedList(folder, 0);
+        if (!isSearchMode) {
+            for (Folder folder : folderList) {
+                addFolderToFlattenedList(folder, 0);
+            }
+        } else {
+            for (Desk desk : filteredDesks) {
+                flattenedList.add(new ListItem(desk, 0, TYPE_DESK)); // Level = 0 để không thụt lề
+            }
         }
     }
 
     private void addFolderToFlattenedList(Folder folder, int level) {
         flattenedList.add(new ListItem(folder, level, TYPE_FOLDER));
-
         if (folder.isExpanded()) {
             for (Folder subFolder : folder.getSubFolders()) {
                 addFolderToFlattenedList(subFolder, level + 1);
@@ -62,7 +71,6 @@ public class ShowFoldersAndDecksAdapter extends BaseAdapter {
             for (Desk desk : folder.getDesks()) {
                 flattenedList.add(new ListItem(desk, level + 1, TYPE_DESK));
             }
-
         }
     }
 
@@ -160,9 +168,25 @@ public class ShowFoldersAndDecksAdapter extends BaseAdapter {
         return view;
     }
 
+    public void setSearchMode(boolean isSearchMode, List<Desk> filteredDesks) {
+        this.isSearchMode = isSearchMode;
+        this.filteredDesks = filteredDesks;
+        updateFlattenedList();
+    }
+
     public void updateFolderList(List<Folder> newFolderList) {
         this.folderList = newFolderList;
+        this.allDesks = getAllDesksFromFolders(newFolderList); // Cập nhật allDesks
         updateFlattenedList();
         notifyDataSetChanged();
+    }
+
+    private List<Desk> getAllDesksFromFolders(List<Folder> folders) {
+        List<Desk> desks = new ArrayList<>();
+        for (Folder folder : folders) {
+            desks.addAll(folder.getDesks());
+            desks.addAll(getAllDesksFromFolders(folder.getSubFolders()));
+        }
+        return desks;
     }
 }
