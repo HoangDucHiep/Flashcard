@@ -25,11 +25,11 @@ public class DeskDao {
     public long insertDesk(Desk desk) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("id", desk.getId()); // Thêm id để seed data
+        //values.put("id", desk.getId());
         values.put("folder_id", desk.getFolderId());
         values.put("name", desk.getName());
         values.put("created_at", desk.getCreatedAt());
-        values.put("is_public", desk.isPublic() ? 1 : 0); // Lưu isPublic
+        values.put("is_public", desk.isPublic() ? 1 : 0);
         long id = db.insert("desks", null, values);
         db.close();
         return id;
