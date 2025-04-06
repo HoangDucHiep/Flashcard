@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -31,12 +32,12 @@ import java.util.Locale;
 public class HomeFragment extends Fragment {
 
     private ListView ShowFolderAndDeckLV;
-    private ArrayList<Folder> folderList;
+    private ArrayList<Folder> nestedFoldersDesks;
     private ShowFoldersAndDecksAdapter adapter;
     private FloatingActionButton AddFolderAndDeckFAB;
-
     private FolderRepository folderRepository = App.getInstance().getFolderRepository();
     private DeskRepository deskRepository = App.getInstance().getDeskRepository();
+    private SearchView searchView;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -51,8 +52,8 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         ShowFolderAndDeckLV = view.findViewById(R.id.ShowFoldersAndDecksLV);
         AddFolderAndDeckFAB = view.findViewById(R.id.AddFoldersAndDecksFAB);
-        folderList = getFoldersFromLocalDb();
-        adapter = new ShowFoldersAndDecksAdapter(getActivity(), folderList);
+        nestedFoldersDesks = getFoldersFromLocalDb();
+        adapter = new ShowFoldersAndDecksAdapter(getActivity(), nestedFoldersDesks);
         ShowFolderAndDeckLV.setAdapter(adapter);
         AddFolderAndDeckFAB.setOnClickListener(v -> showCreateBottomSheet());
         return view;
@@ -108,7 +109,7 @@ public class HomeFragment extends Fragment {
         List<Folder> allFolders = getAllFoldersList();
 
         if (selectedPosition == 0) {
-            folderList.add(newFolder);
+            nestedFoldersDesks.add(newFolder);
         } else {
             Folder parentFolder = allFolders.get(selectedPosition - 1);
             newFolder.setParentFolderId(parentFolder.getId());
@@ -119,7 +120,7 @@ public class HomeFragment extends Fragment {
         long insertedId = folderRepository.insertFolder(newFolder);
         if (insertedId != -1) {
             newFolder.setId((int) insertedId);
-            adapter.updateFolderList(folderList);
+            adapter.updateFolderList(nestedFoldersDesks);
             Toast.makeText(requireContext(), "Folder created successfully", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(requireContext(), "Failed to create folder", Toast.LENGTH_SHORT).show();
@@ -171,7 +172,7 @@ public class HomeFragment extends Fragment {
             newDesk.setId((int) insertedId);
             parentFolder.addDesk(newDesk);
             parentFolder.setExpanded(true);
-            adapter.updateFolderList(folderList);
+            adapter.updateFolderList(nestedFoldersDesks);
             Toast.makeText(requireContext(), "Desk created successfully", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(requireContext(), "Failed to create desk", Toast.LENGTH_SHORT).show();
@@ -181,7 +182,7 @@ public class HomeFragment extends Fragment {
     private List<String> getFolderNamesWithIndent() {
         List<String> folderNames = new ArrayList<>();
         folderNames.add(getString(R.string.no_parent_folder)); // "No Parent Folder"
-        getAllFoldersWithIndent(folderList, folderNames, "");
+        getAllFoldersWithIndent(nestedFoldersDesks, folderNames, "");
         return folderNames;
     }
 
@@ -194,7 +195,7 @@ public class HomeFragment extends Fragment {
 
     private List<Folder> getAllFoldersList() {
         List<Folder> allFolders = new ArrayList<>();
-        getAllFolders(folderList, allFolders);
+        getAllFolders(nestedFoldersDesks, allFolders);
         return allFolders;
     }
 
