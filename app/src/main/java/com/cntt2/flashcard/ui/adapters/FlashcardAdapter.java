@@ -47,4 +47,10 @@ public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.Card
             cardFront = itemView.findViewById(R.id.tvCardFront);
         }
     }
+
+    public void setData(List<Card> newList) {
+        this.flashcardList = newList;
+        notifyDataSetChanged();
+    }
+
 }
