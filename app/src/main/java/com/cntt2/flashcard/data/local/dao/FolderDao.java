@@ -27,7 +27,7 @@ public class FolderDao {
     public long insertFolder(Folder folder) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("id", folder.getId()); // Thêm id để seed data
+        //values.put("id", folder.getId()); // Thêm id để seed data
         if (folder.getParentFolderId() != null) {
             values.put("parent_folder_id", folder.getParentFolderId());
         }

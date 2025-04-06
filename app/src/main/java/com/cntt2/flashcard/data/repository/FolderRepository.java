@@ -18,8 +18,8 @@ public class FolderRepository {
         deskDao = new DeskDao(context);
     }
 
-    public void insertFolder(Folder folder) {
-        folderDao.insertFolder(folder);
+    public long insertFolder(Folder folder) {
+        return folderDao.insertFolder(folder);
     }
 
     public void deleteFolder(Folder folder) {

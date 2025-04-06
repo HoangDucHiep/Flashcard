@@ -14,8 +14,8 @@ public class DeskRepository {
         this.deskDao = new DeskDao(context);
     }
 
-    public void insertDesk(Desk desk) {
-        deskDao.insertDesk(desk);
+    public long insertDesk(Desk desk) {
+        return deskDao.insertDesk(desk);
     }
 
     public void deleteDesk(Desk desk) {
