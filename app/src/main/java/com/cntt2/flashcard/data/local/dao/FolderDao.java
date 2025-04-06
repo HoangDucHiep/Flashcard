@@ -44,6 +44,18 @@ public class FolderDao {
         db.close();
     }
 
+    public void updateFolder(Folder folder) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        if (folder.getParentFolderId() != null) {
+            values.put("parent_folder_id", folder.getParentFolderId());
+        }
+        values.put("name", folder.getName());
+        values.put("created_at", folder.getCreatedAt());
+        db.update("folders", values, "id = ?", new String[]{String.valueOf(folder.getId())});
+        db.close();
+    }
+
     public void clearAllFolders() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM folders");

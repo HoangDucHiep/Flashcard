@@ -22,6 +22,10 @@ public class FolderRepository {
         return folderDao.insertFolder(folder);
     }
 
+    public void updateFolder(Folder folder) {
+        folderDao.updateFolder(folder);
+    }
+
     public void deleteFolder(Folder folder) {
         folderDao.deleteFolder(folder.getId());
     }
