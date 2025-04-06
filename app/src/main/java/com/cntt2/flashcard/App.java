@@ -28,6 +28,9 @@ public class App extends Application {
         cardRepository = new CardRepository(this);
         reviewRepository = new ReviewRepository(this);
         learningSessionRepository = new LearningSessionRepository(this);
+
+        // Seed the database with initial data
+        folderRepository.seedDatabase();
     }
 
     public static App getInstance() {

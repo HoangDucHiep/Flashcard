@@ -23,11 +23,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY (parent_folder_id) REFERENCES folders(id))");
 
         db.execSQL("CREATE TABLE desks (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "folder_id INTEGER NOT NULL, " +
-                "name TEXT, " +
-                "created_at TEXT, " +
-                "FOREIGN KEY (folder_id) REFERENCES folders(id))");
+                "id INTEGER PRIMARY KEY," +
+                "folder_id INTEGER," +
+                "name TEXT," +
+                "created_at TEXT," +
+                "is_public INTEGER DEFAULT 0," +
+                "FOREIGN KEY(folder_id) REFERENCES folders(id))");
 
         db.execSQL("CREATE TABLE cards (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
