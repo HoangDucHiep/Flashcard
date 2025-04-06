@@ -7,6 +7,20 @@ public class Desk {
     private int id;
     private Integer folderId;
     private String name;
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean aPublic) {
+        isPublic = aPublic;
+    }
+
+    public void setFolderId(Integer folderId) {
+        this.folderId = folderId;
+    }
+
+    private boolean isPublic = false;
     private String createdAt;
     private List<Card> cards = new ArrayList<>();
 

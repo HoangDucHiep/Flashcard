@@ -10,7 +10,9 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.cntt2.flashcard.App;
 import com.cntt2.flashcard.R;
+import com.cntt2.flashcard.data.repository.FolderRepository;
 import com.cntt2.flashcard.model.Desk;
 import com.cntt2.flashcard.model.Folder;
 import com.cntt2.flashcard.ui.adapters.ShowFoldersAndDecksAdapter;
@@ -36,6 +38,7 @@ public class HomeFragment extends Fragment {
     private ShowFoldersAndDecksAdapter adapter;
     private FloatingActionButton AddFolderAndDeckFAB;
 
+    private FolderRepository folderRepository = App.getInstance().getFolderRepository();
 
 
     // TODO: Rename parameter arguments, choose names that match
@@ -86,7 +89,7 @@ public class HomeFragment extends Fragment {
 
         ShowFolderAndDeckLV = view.findViewById(R.id.ShowFoldersAndDecksLV);
         AddFolderAndDeckFAB = view.findViewById(R.id.AddFoldersAndDecksFAB);
-        folderList = createSampleFolderStructure();
+        folderList = getFoldersFromLocalDb();
 
         adapter = new ShowFoldersAndDecksAdapter(getActivity(), folderList);
         ShowFolderAndDeckLV.setAdapter(adapter);
@@ -207,6 +210,12 @@ public class HomeFragment extends Fragment {
         deckDialog.show();
     }
 
+
+    private ArrayList<Folder> getFoldersFromLocalDb()
+    {
+        var folders = folderRepository.getNestedFolders();
+        return (ArrayList<Folder>) folders;
+    }
 
 
 
