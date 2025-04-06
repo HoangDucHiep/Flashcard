@@ -12,6 +12,16 @@ public class Folder {
     private List<Folder> subFolders = new ArrayList<>();
     private List<Desk> desks = new ArrayList<>();
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String displayName;
+
     public Folder() {}
 
     public Folder(String name, String createdAt) {

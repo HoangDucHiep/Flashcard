@@ -7,8 +7,10 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 
 import com.cntt2.flashcard.App;
 import com.cntt2.flashcard.R;
@@ -127,37 +129,44 @@ public class HomeFragment extends Fragment {
         BottomSheetDialog folderDialog = new BottomSheetDialog(requireContext());
         folderDialog.setContentView(view);
 
+        Spinner parentFolderSpinner = view.findViewById(R.id.parentFolderSpinner);
+        List<String> folderNames = new ArrayList<>();
+        List<Folder> allFolders = new ArrayList<>();
+        folderNames.add("No Parent Folder");
+        getAllFolders(folderList, allFolders, "");
+        for (Folder folder : allFolders) {
+            folderNames.add(folder.getDisplayName());
+        }
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                folderNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        parentFolderSpinner.setAdapter(spinnerAdapter);
+
         // Xử lý nút Save
         view.findViewById(R.id.btnFolderSave).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText folderNameInput= view.findViewById(R.id.folderNameInput);
-                EditText parentFolderNameInput= view.findViewById(R.id.SelectParentFolder);
 
-                String folderName=folderNameInput.getText().toString();
-                String parentFolderName=parentFolderNameInput.getText().toString();
-                String createAt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .format(new Date());
-                Folder newFolder = new Folder(folderName, createAt);
-
-                // Nếu không chọn parent hoặc chuỗi rỗng → thêm vào folder gốc
-                if (parentFolderName == null || parentFolderName.trim().isEmpty()) {
-                    folderList.add(newFolder);
-                } else {
-                    Folder parentFolder = findFolderByName(folderList, parentFolderName);
-                    if (parentFolder != null) {
-                        parentFolder.setExpanded(true);
-                        newFolder.setParentFolderId(parentFolder.getId());
-                        parentFolder.addSubFolder(newFolder);
-                    }
-                }
-
-                adapter.updateFolderList(folderList);
-                folderDialog.dismiss();
             }
         });
 
         folderDialog.show();
+    }
+
+    private void getAllFolders(List<Folder> folders, List<Folder> allFolders, String indent) {
+        for (Folder folder : folders) {
+            folder.setDisplayName(indent + folder.getName()); // Lưu tạm display name
+            allFolders.add(folder);
+            getAllFolders(folder.getSubFolders(), allFolders, indent + "  ");
+        }
+    }
+
+    private void saveFolderToDatabase(Folder folder) {
+        folderRepository.insertFolder(folder);
     }
 
     private Folder findFolderByName(List<Folder> folders, String name) {
@@ -180,30 +189,27 @@ public class HomeFragment extends Fragment {
         BottomSheetDialog deckDialog = new BottomSheetDialog(requireContext());
         deckDialog.setContentView(view);
 
+        Spinner folderSpinner = view.findViewById(R.id.folderSpinner);
+        List<String> folderNames = new ArrayList<>();
+        List<Folder> allFolders = new ArrayList<>();
+        getAllFolders(folderList, allFolders, "");
+        folderNames.add("No Parent Folder");
+        for (Folder folder : allFolders) {
+            folderNames.add(folder.getDisplayName());
+        }
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                folderNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        folderSpinner.setAdapter(spinnerAdapter);
+
         view.findViewById(R.id.btnDeckSave).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText deckNameInput = view.findViewById(R.id.deckNameInput);
-                EditText selectedFolderInput = view.findViewById(R.id.SelectedFolder);
 
-                String deckName = deckNameInput.getText().toString();
-                String selectedFolderName = selectedFolderInput.getText().toString();
-
-                String createAt = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .format(new Date());
-
-
-                Desk newDeck = new Desk(deckName, -1, createAt);
-
-                Folder targetFolder = findFolderByName(folderList, selectedFolderName);
-                if (targetFolder != null) {
-                    newDeck.setFolderId(targetFolder.getId());
-                    targetFolder.addDesk(newDeck);
-                    targetFolder.setExpanded(true);
-                }
-
-                adapter.updateFolderList(folderList);
-                deckDialog.dismiss();
             }
         });
 

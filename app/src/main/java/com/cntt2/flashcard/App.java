@@ -30,7 +30,7 @@ public class App extends Application {
         learningSessionRepository = new LearningSessionRepository(this);
 
         // Seed the database with initial data
-        folderRepository.seedDatabase();
+        //folderRepository.seedDatabase();
     }
 
     public static App getInstance() {

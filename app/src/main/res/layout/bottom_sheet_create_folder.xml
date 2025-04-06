@@ -33,11 +33,16 @@
         android:padding="16dp"
         android:layout_marginBottom="16dp" />
 
-    <EditText
-        android:id="@+id/SelectParentFolder"
+    <TextView
+        android:id="@+id/textView2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Parent Folder Name"
+        android:text="Selected parent folder" />
+
+    <Spinner
+        android:id="@+id/parentFolderSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:padding="16dp"
         android:layout_marginBottom="16dp" />
 
