@@ -12,8 +12,9 @@ public class Desk {
 
     public Desk() {}
 
-    public Desk(String name, String createdAt) {
+    public Desk(String name, int folderId, String createdAt) {
         this.name = name;
+        this.folderId = folderId;
         this.createdAt = createdAt;
     }
 
@@ -25,11 +26,11 @@ public class Desk {
         this.id = id;
     }
 
-    public Integer getFolderId() {
+    public int getFolderId() {
         return folderId;
     }
 
-    public void setFolderId(Integer folderId) {
+    public void setFolderId(int folderId) {
         this.folderId = folderId;
     }
 
